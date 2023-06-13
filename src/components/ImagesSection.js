@@ -1,7 +1,9 @@
-import { updateUser } from "@/services/axiosService";
+"use client";
+import { updateUser } from "../services/axiosService";
 import { useImages } from "../context/imageContext";
 import React, { useRef, useState } from "react";
-import useUserContext from "@/context/userContext";
+import useUserContext from "../context/userContext";
+
 const Images = () => {
   const { images, setImages, dragUrl, setDragUrl } = useImages();
   const [loading, setLoading] = useState(false);

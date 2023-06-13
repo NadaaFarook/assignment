@@ -1,7 +1,8 @@
+"use client";
 import React, { forwardRef, useRef, useState } from "react";
 import { Group, Text, Transformer } from "react-konva";
 import { TextEditor } from "./index";
-import { useLayer } from "@/context/layerContext";
+import { useLayer } from "../context/layerContext";
 
 const EditorSt = forwardRef((props) => {
   const {
@@ -19,14 +20,13 @@ const EditorSt = forwardRef((props) => {
     shadowOffsetX,
     shadowOffsetY,
   } = props;
-  const { layers, setLayers, history, setHistory, UpdateState } = useLayer();
+  const { layers, setLayers, UpdateState } = useLayer();
   const [editorEnabled, setEditorEnabled] = useState(false);
   const textRef = useRef(null);
   const textWrapperRef = useRef(null);
   const trRef = React.useRef();
   React.useEffect(() => {
     if (isSelected) {
-      // we need to attach transformer manually
       trRef.current.nodes([textRef.current]);
       trRef.current.getLayer().batchDraw();
     }
@@ -68,15 +68,12 @@ const EditorSt = forwardRef((props) => {
             setEditorEnabled(true);
           }}
           visible={!editorEnabled}
-          onTransformEnd={(e) => {
+          onTransformEnd={() => {
             const grpNode = textWrapperRef.current;
             const node = textRef.current;
             const scaleX = node.scaleX();
-            const scaleY = node.scaleY();
-            // we will reset it back
             node.scaleX(1);
             node.scaleY(1);
-            console.log(scaleX, "scaleX");
 
             UpdateState({
               id: layer.id,
@@ -108,13 +105,7 @@ const EditorSt = forwardRef((props) => {
             newBox.width = Math.max(30, newBox.width);
             return newBox;
           }}
-          // boundBoxFunc={(oldBox, newBox) => {
-          //   // limit resize
-          //   if (newBox.width < 5 || newBox.height < 5) {
-          //     return oldBox;
-          //   }
-          //   return newBox;
-          // }}
+          
         />
       )}
     </>

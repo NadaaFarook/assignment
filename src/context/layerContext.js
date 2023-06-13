@@ -2,7 +2,7 @@
 import React, { useState, createContext, useContext, useRef } from "react";
 import { v4 as uuid } from "uuid";
 import useUserContext from "./userContext";
-import { updateUser } from "@/services/axiosService";
+import { updateUser } from "../services/axiosService";
 
 const LayerContext = createContext();
 

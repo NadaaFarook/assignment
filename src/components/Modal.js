@@ -9,7 +9,7 @@ import {
   Input,
   Label,
   StyleEditor,
-} from "../components";
+} from ".";
 import { v4 as uuid } from "uuid";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
@@ -19,8 +19,8 @@ import {
   updateUser,
   login as authLogin,
   register,
-} from "@/services/axiosService";
-import useUserContext from "@/context/userContext";
+} from "../services/axiosService";
+import useUserContext from "../context/userContext";
 const Modal = ({ open, setOpen, cancelButtonRef }) => {
   const { userContext, setContextUser } = useUserContext();
   const login = useGoogleLogin({
@@ -42,7 +42,6 @@ const Modal = ({ open, setOpen, cancelButtonRef }) => {
             picture: res.data.picture,
             token: response.access_token,
           });
-          console.log(resp);
           if (resp.status == 200) {
             setContextUser(resp.data.data);
             localStorage.setItem("x-auth-token", resp.data.session);
@@ -51,12 +50,10 @@ const Modal = ({ open, setOpen, cancelButtonRef }) => {
             toast(resp.data.message, { type: "success" });
           }
         } catch (error) {
-          console.log(error);
           toast(error?.response?.data?.message, { type: "error" });
           setContextUser({});
         }
       } catch (err) {
-        console.log(err);
         toast("Error fetching google credentials. Please try again.", {
           type: "error",
         });

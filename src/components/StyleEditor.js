@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
-import { Input, Label } from "../components";
+import { Input, Label } from ".";
 
-import { useLayer } from "@/context/layerContext";
+import { useLayer } from "../context/layerContext";
 
 const StyleEditor = () => {
   const { layers, selectedId, UpdateState } = useLayer();

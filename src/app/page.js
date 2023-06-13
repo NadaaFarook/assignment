@@ -1,30 +1,26 @@
 "use client";
-import React, { useState, useRef, useId, Fragment, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Button,
   Download,
   EditorSt,
   Images,
   ImageComponent,
-  Input,
-  Label,
   StyleEditor,
   Modal,
-} from "../components";
+} from "../../components";
 import { v4 as uuid } from "uuid";
-import { Dialog, Transition } from "@headlessui/react";
-import { Stage, Layer, Rect, Image, Group, Text } from "react-konva";
-import { ToastContainer, toast } from "react-toastify";
+import { Stage, Layer } from "react-konva";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ImageProvider, useImages } from "@/context/imageContext";
-import { useLayer } from "@/context/layerContext";
-import { Html } from "react-konva-utils";
+import { useImages } from "../../context/imageContext";
+import { useLayer } from "../../context/layerContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { getUser, updateUser } from "@/services/axiosService";
-import useUserContext from "@/context/userContext";
+import { getUser, updateUser } from "../../services/axiosService";
+import useUserContext from "../../context/userContext";
 
 export default function Home() {
-  const { images, dragUrl, setImages, setDragUrl } = useImages();
+  const { dragUrl, setImages } = useImages();
   const [open, setOpen] = useState(true);
   const { userContext, setContextUser } = useUserContext();
   const cancelButtonRef = useRef(null);
@@ -37,6 +33,7 @@ export default function Home() {
     setSelected,
     UpdateState,
   } = useLayer();
+
   const checkDeselect = (e) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
@@ -52,15 +49,12 @@ export default function Home() {
       try {
         const res = await getUser();
         if (res.status == 200) {
-          console.log(res.data);
           setContextUser(res.data.data);
           setImages(res.data.data.imagesUploads);
           setLayers(res.data.data.layers);
         }
       } catch (error) {
-        console.log(error, "errooor");
-        // localStorage.removeItem("x-auth-token");
-        // localStorage.removeItem("x-auth-email");
+        console.log(error, "error");
       }
     };
     fetchData();
@@ -156,9 +150,8 @@ export default function Home() {
             <div
               onDrop={(e) => {
                 e.preventDefault();
-                // register event position
                 stageRef.current.setPointersPositions(e);
-                // add image
+                
                 const id = uuid();
                 setLayers([
                   ...layers,

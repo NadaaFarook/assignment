@@ -1,3 +1,4 @@
+"use client";
 import React, { useRef } from "react";
 import { Html } from "react-konva-utils";
 
@@ -7,9 +8,7 @@ export const TextEditor = ({ textNodeRef, value, onBlur, onChange }) => {
   const cursorPosition = 0;
   React.useLayoutEffect(() => {
     const textNode = textNodeRef.current;
-    // apply many styles to match text on canvas as close as possible
-    // remember that text rendering on canvas and on the textarea can be different
-    // and sometimes it is hard to make it 100% the same. But we will try...
+
     const newStyle = {};
     newStyle.width = textNode.width() - textNode.padding() * 2 + "px";
     newStyle.height = textNode.height() - textNode.padding() * 2 + 10 + "px";

@@ -1,10 +1,8 @@
-import { ImageProvider } from "@/context/imageContext";
+import { ImageProvider } from "../../context/imageContext";
 import "./globals.css";
-//import "react-toastify/dist/ReactToastify.css";
 import { Inter } from "next/font/google";
-import { LayerProvider } from "@/context/layerContext";
-import { ToastContainer } from "react-toastify";
-import { UserContextProvider } from "@/context/userContext";
+import { LayerProvider } from "../../context/layerContext";
+import { UserContextProvider } from "../../context/userContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
