@@ -1,113 +1,273 @@
-import Image from 'next/image'
+"use client";
+import React, { useState, useRef, useId, Fragment, useEffect } from "react";
+import {
+  Button,
+  Download,
+  EditorSt,
+  Images,
+  ImageComponent,
+  Input,
+  Label,
+  StyleEditor,
+  Modal,
+} from "../components";
+import { v4 as uuid } from "uuid";
+import { Dialog, Transition } from "@headlessui/react";
+import { Stage, Layer, Rect, Image, Group, Text } from "react-konva";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ImageProvider, useImages } from "@/context/imageContext";
+import { useLayer } from "@/context/layerContext";
+import { Html } from "react-konva-utils";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { getUser, updateUser } from "@/services/axiosService";
+import useUserContext from "@/context/userContext";
 
 export default function Home() {
+  const { images, dragUrl, setImages, setDragUrl } = useImages();
+  const [open, setOpen] = useState(true);
+  const { userContext, setContextUser } = useUserContext();
+  const cancelButtonRef = useRef(null);
+  const {
+    layers,
+    setLayers,
+    history,
+    setHistory,
+    selectedId,
+    setSelected,
+    UpdateState,
+  } = useLayer();
+  const checkDeselect = (e) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setSelected(null);
+    }
+  };
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  const stageRef = useRef();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getUser();
+        if (res.status == 200) {
+          console.log(res.data);
+          setContextUser(res.data.data);
+          setImages(res.data.data.imagesUploads);
+          setLayers(res.data.data.layers);
+        }
+      } catch (error) {
+        console.log(error, "errooor");
+        // localStorage.removeItem("x-auth-token");
+        // localStorage.removeItem("x-auth-email");
+      }
+    };
+    fetchData();
+  }, []);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <GoogleOAuthProvider clientId="342222579547-ft07jlbd7o512lv9fpjhfulpon2aoirs.apps.googleusercontent.com">
+      <main className="flex h-screen w-screen gap-4 bg-gray-950">
+        <aside
+          className="top-0 left-0  w-1/4 h-screen transition-transform -translate-x-full sm:translate-x-0"
+          aria-label="Sidebar"
+        >
+          <div className="flex flex-col h-full px-4 py-4 gap-4 bg-gray-900">
+            <p>Image Gallery</p>
+            <Images />
+            <p>Editor</p>
+            <StyleEditor />
+            <Download stageRef={stageRef} />
+          </div>
+        </aside>
+        <div className="flex flex-col w-full py-4 gap-4 pr-4">
+          <div className="flex gap-4">
+            <Button
+              disabled={historyIndex + 1 == history.length} // valid
+              onClick={() => {
+                setLayers(history[history.length - historyIndex - 2]);
+                setHistoryIndex(historyIndex + 1);
+                updateUser({
+                  ...userContext,
+                  layers: history[history.length - historyIndex - 2],
+                });
+              }}
+            >
+              Undo
+            </Button>
+            <Button
+              disabled={historyIndex == 0}
+              onClick={() => {
+                setLayers(history[history.length - historyIndex]);
+                setHistoryIndex(historyIndex - 1);
+                updateUser({
+                  ...userContext,
+                  layers: history[history.length - historyIndex],
+                });
+              }}
+            >
+              Redo
+            </Button>
+            <Button
+              onClick={() => {
+                setLayers([
+                  ...layers,
+                  {
+                    type: "text",
+                    isDragging: false,
+                    id: uuid(),
+                    text: "Start typing here",
+                    x: 150,
+                    y: 150,
+                    fontSize: 20,
+                    fontColor: "#ffffff",
+                    shadowColor: "#000000",
+                    shadowBlur: 0,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                  },
+                ]);
+                updateUser({
+                  ...userContext,
+                  layers: [
+                    ...layers,
+                    {
+                      type: "text",
+                      isDragging: false,
+                      id: uuid(),
+                      text: "Start typing here",
+                      x: 150,
+                      y: 150,
+                      fontSize: 20,
+                      fontColor: "#ffffff",
+                      shadowColor: "#000000",
+                      shadowBlur: 0,
+                      shadowOffsetX: 0,
+                      shadowOffsetY: 0,
+                    },
+                  ],
+                });
+              }}
+            >
+              Add Text
+            </Button>
+          </div>
+          <div className="flex flex-col h-full p-4 rounded gap-4 bg-gray-900 justify-center items-center">
+            <div
+              onDrop={(e) => {
+                e.preventDefault();
+                // register event position
+                stageRef.current.setPointersPositions(e);
+                // add image
+                const id = uuid();
+                setLayers([
+                  ...layers,
+                  {
+                    ...stageRef.current.getPointerPosition(),
+                    src: dragUrl,
+                    type: "image",
+                    isDragging: false,
+                    id: id,
+                  },
+                ]);
+                updateUser({
+                  ...userContext,
+                  layers: [
+                    ...layers,
+                    {
+                      ...stageRef.current.getPointerPosition(),
+                      src: dragUrl,
+                      type: "image",
+                      isDragging: false,
+                      id: id,
+                    },
+                  ],
+                });
+
+                setHistory([
+                  ...history,
+                  [
+                    ...layers,
+                    {
+                      ...stageRef.current.getPointerPosition(),
+                      src: dragUrl,
+                      type: "image",
+                      isDragging: false,
+                      id: id,
+                    },
+                  ],
+                ]);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              <Stage
+                style={{
+                  border: "1px solid #334a77",
+                }}
+                width={600}
+                height={600}
+                ref={stageRef}
+                onMouseDown={checkDeselect}
+                onTouchStart={checkDeselect}
+              >
+                <Layer>
+                  {layers.map((layer) => {
+                    if (layer.type == "image")
+                      return (
+                        <ImageComponent
+                          layer={layer}
+                          key={layer.id}
+                          isSelected={layer.id === selectedId}
+                          onSelect={() => {
+                            setSelected(layer.id);
+                          }}
+                        />
+                      );
+                    if (layer.type == "text")
+                      return (
+                        <EditorSt
+                          layer={layer}
+                          isSelected={layer.id === selectedId}
+                          text={layer.text}
+                          fontSize={layer.fontSize}
+                          fontColor={layer.fontColor}
+                          shadowColor={layer.shadowColor}
+                          shadowBlur={layer.shadowBlur}
+                          shadowOffsetX={layer.shadowOffsetX}
+                          shadowOffsetY={layer.shadowOffsetY}
+                          x={layer.x}
+                          y={layer.y}
+                          onSelect={() => {
+                            setSelected(layer.id);
+                          }}
+                          onChange={(e) => {
+                            UpdateState({
+                              id: layer.id,
+                              text: e,
+                            });
+                          }}
+                        />
+                      );
+                  })}
+                </Layer>
+              </Stage>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+      </main>
+      <Modal open={open} setOpen={setOpen} cancelButtonRef={cancelButtonRef} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+    </GoogleOAuthProvider>
+  );
 }
